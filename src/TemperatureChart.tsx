@@ -1,15 +1,23 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-export function TemperatureChart({ data }) {
-  const svgRef = useRef();
+interface TemperatureDataPoint {
+  date: string;
+  temperature: number;
+}
+
+interface TemperatureChartProps {
+  data: TemperatureDataPoint[];
+}
+
+export function TemperatureChart({ data }: TemperatureChartProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-
     const width = 600;
     const height = 400;
-    const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+    const margin = { top: 20, right: 30, bottom: 60, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -22,7 +30,7 @@ export function TemperatureChart({ data }) {
 
     const yScale = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.temperature)])
+      .domain([0, d3.max(data, (d) => d.temperature)!])
       .nice()
       .range([innerHeight, 0]);
 
@@ -45,7 +53,7 @@ export function TemperatureChart({ data }) {
       .call(yAxis);
 
     const line = d3
-      .line()
+      .line<TemperatureDataPoint>()
       .x((d) => xScale(new Date(d.date)) + margin.left)
       .y((d) => yScale(d.temperature) + margin.top);
 
@@ -56,8 +64,35 @@ export function TemperatureChart({ data }) {
       .attr("d", line)
       .attr("stroke", "blue")
       .attr("fill", "none");
+
+    svg
+      .append("text")
+      .attr("class", "x-label")
+      .attr("x", width / 2)
+      .attr("y", height - 10)
+      .style("text-anchor", "middle")
+      .text("Date");
+
+    svg
+      .append("text")
+      .attr("class", "y-label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", 20)
+      .style("text-anchor", "middle")
+      .text("Temperature (°F)");
+
+    svg
+      .append("text")
+      .attr("class", "chart-title")
+      .attr("x", width / 2)
+      .attr("y", margin.top)
+      .style("text-anchor", "middle")
+      .style("font-size", "1.5rem")
+      .text("Temperature vs. Date Chart");
   }, [data]);
 
   return <svg ref={svgRef}></svg>;
 }
+
 
